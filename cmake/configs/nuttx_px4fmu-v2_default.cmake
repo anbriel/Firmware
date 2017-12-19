@@ -24,8 +24,8 @@ set(config_module_list
 	drivers/hmc5883
 	drivers/ms5611
 	#drivers/mb12xx
-	drivers/srf02
-	drivers/sf0x
+        #drivers/srf02
+        #drivers/sf0x
 	drivers/ll40ls
 	drivers/trone
 	drivers/gps
@@ -38,9 +38,12 @@ set(config_module_list
 	drivers/ets_airspeed
 	drivers/meas_airspeed
 	drivers/frsky_telemetry
+        drivers/vmount
 	modules/sensors
 	#drivers/mkblctrl
-	drivers/px4flow
+        #drivers/px4flow
+	drivers/md25
+        #drivers/roboclaw
 	drivers/oreoled
 	drivers/gimbal
 	drivers/pwm_input
@@ -74,6 +77,7 @@ set(config_module_list
 	modules/gpio_led
 	modules/uavcan
 	modules/land_detector
+        modules/rover_md25_control
 
 	#
 	# Estimation modules (EKF/ SO3 / other filters)
@@ -93,6 +97,7 @@ set(config_module_list
 	modules/mc_att_control
 	modules/mc_pos_control
 	modules/vtol_att_control
+        modules/rv_pos_control
 
 	#
 	# Logging
@@ -138,7 +143,7 @@ set(config_module_list
 	#
 	# Rover apps
 	#
-	examples/rover_steering_control
+	#examples/rover_steering_control
 
 	#
 	# Demo apps

@@ -171,7 +171,7 @@ GPS::GPS(const char *uart_path, bool fake_gps, bool enable_sat_info) :
 	_task_should_exit(false),
 	_healthy(false),
 	_mode_changed(false),
-	_mode(GPS_DRIVER_MODE_UBX),
+	_mode(GPS_DRIVER_MODE_ASHTECH),//F.BERNAT
 	_Helper(nullptr),
 	_Sat_Info(nullptr),
 	_report_gps_pos_pub(nullptr),
@@ -345,6 +345,7 @@ GPS::task_main()
 
 			case GPS_DRIVER_MODE_ASHTECH:
 				_Helper = new ASHTECH(_serial_fd, &_report_gps_pos, _p_report_sat_info);
+
 				break;
 
 			default:
@@ -399,10 +400,11 @@ GPS::task_main()
 				while ((helper_ret = _Helper->receive(TIMEOUT_5HZ)) > 0 && !_task_should_exit) {
 					//				lock();
 					/* opportunistic publishing - else invalid data would end up on the bus */
+				  	if (!(_pub_blocked)) {
 
-					if (!(_pub_blocked)) {
 						if (helper_ret & 1) {
 							if (_report_gps_pos_pub != nullptr) {
+
 								orb_publish(ORB_ID(vehicle_gps_position), _report_gps_pos_pub, &_report_gps_pos);
 
 							} else {

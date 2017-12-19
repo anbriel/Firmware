@@ -223,7 +223,7 @@ public:
 	 */
 	bool			get_manual_input_mode_generation() { return _generate_rc; }
 
-	void			send_message(const uint8_t msgid, const void *msg, uint8_t component_ID = 0);
+	void			send_message(const uint16_t msgid, const void *msg, uint8_t component_ID = 0);
 
 	/**
 	 * Resend message as is, don't change sequence number and CRC.

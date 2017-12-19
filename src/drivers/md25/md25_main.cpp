@@ -53,13 +53,14 @@
 
 #include <systemlib/systemlib.h>
 #include <systemlib/param/param.h>
-
+#include <uORB/topics/encoders.h> // encoders
 #include <arch/board/board.h>
 #include "md25.hpp"
 
 static bool thread_should_exit = false;     /**< Deamon exit flag */
 static bool thread_running = false;     /**< Deamon status flag */
 static int deamon_task;             /**< Handle of deamon task / thread */
+
 
 /**
  * Deamon management function.
@@ -71,6 +72,11 @@ extern "C" __EXPORT int md25_main(int argc, char *argv[]);
  */
 int md25_thread_main(int argc, char *argv[]);
 
+namespace
+{
+MD25 *md25dev = nullptr;
+
+}
 /**
  * Print the correct usage.
  */
@@ -111,12 +117,14 @@ int md25_main(int argc, char *argv[])
 		}
 
 		thread_should_exit = false;
+
 		deamon_task = px4_task_spawn_cmd("md25",
 						 SCHED_DEFAULT,
 						 SCHED_PRIORITY_MAX - 10,
 						 2048,
-						 md25_thread_main,
-						 (const char **)argv);
+						 (px4_main_t)&md25_thread_main,
+						 (char *const *)argv);
+
 		exit(0);
 	}
 
@@ -126,6 +134,11 @@ int md25_main(int argc, char *argv[])
 			printf("usage: md25 test bus address\n");
 			exit(0);
 		}
+		if (thread_running) {
+		            printf("md25 already running\n");
+		            /* this is not an error */
+		            exit(0);
+		        }
 
 		const char *deviceName = "/dev/md25";
 
@@ -278,9 +291,10 @@ int md25_main(int argc, char *argv[])
 
 int md25_thread_main(int argc, char *argv[])
 {
-	printf("[MD25] starting\n");
+    int ret;
 
-	if (argc < 5) {
+	fprintf(stderr, "md25_thread_main\n");
+	if (argc < 4) {
 		// extra md25 in arg list since this is a thread
 		printf("usage: md25 start bus address\n");
 		exit(0);
@@ -293,19 +307,37 @@ int md25_thread_main(int argc, char *argv[])
 	uint8_t address = strtoul(argv[4], nullptr, 0);
 
 	// start
-	MD25 md25(deviceName, bus, address);
+
+	md25dev = new MD25(deviceName, bus, address);
+
+	if (md25dev == nullptr) {
+	  // this is a fatal error
+	 return 1;
+	}
+
+    // init the driver:
+     ret= md25dev->Init();
+     printf("[MD25] ret %i\n",ret);
+     // destroy it again because it failed.
+     if (ret!=OK){
+       delete md25dev;
+       md25dev = nullptr;
+       return ret;
+     }
+
 
 	thread_running = true;
 
 	// loop
+
 	while (!thread_should_exit) {
-		md25.update();
+		md25dev->update();
 	}
 
 	// exit
 	printf("[MD25] exiting.\n");
 	thread_running = false;
+	 delete md25dev;
+	       md25dev = nullptr;
 	return 0;
 }
-
-// vi:noet:smarttab:autoindent:ts=4:sw=4:tw=78

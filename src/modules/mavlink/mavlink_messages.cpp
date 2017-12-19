@@ -75,6 +75,7 @@
 #include <uORB/topics/camera_trigger.h>
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/estimator_status.h>
+#include <uORB/topics/mount_orientation.h>
 #include <drivers/drv_rc_input.h>
 #include <drivers/drv_pwm_output.h>
 #include <systemlib/err.h>
@@ -269,7 +270,7 @@ public:
 		return "HEARTBEAT";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_HEARTBEAT;
 	}
@@ -344,7 +345,7 @@ public:
 		return "STATUSTEXT";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_STATUSTEXT;
 	}
@@ -454,7 +455,7 @@ public:
 		return "COMMAND_LONG";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_COMMAND_LONG;
 	}
@@ -490,7 +491,7 @@ protected:
 			/* only send commands for other systems/components */
 			if (cmd.target_system != mavlink_system.sysid || cmd.target_component != mavlink_system.compid) {
 				mavlink_command_long_t msg;
-
+				//fprintf(stderr, "send command long %i\n",cmd.target_system);
 				msg.target_system = cmd.target_system;
 				msg.target_component = cmd.target_component;
 				msg.command = cmd.command;
@@ -522,7 +523,7 @@ public:
 		return "SYS_STATUS";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_SYS_STATUS;
 	}
@@ -619,7 +620,7 @@ public:
 		return "HIGHRES_IMU";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_HIGHRES_IMU;
 	}
@@ -725,7 +726,7 @@ public:
 		return "ATTITUDE";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_ATTITUDE;
 	}
@@ -789,7 +790,7 @@ public:
 		return "ATTITUDE_QUATERNION";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_ATTITUDE_QUATERNION;
 	}
@@ -854,7 +855,7 @@ public:
 		return "VFR_HUD";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_VFR_HUD;
 	}
@@ -959,7 +960,7 @@ public:
 		return "GPS_RAW_INT";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_GPS_RAW_INT;
 	}
@@ -1022,7 +1023,7 @@ public:
 		return "SYSTEM_TIME";
 	}
 
-	uint8_t get_id() {
+	uint16_t get_id() {
 		return MAVLINK_MSG_ID_SYSTEM_TIME;
 	}
 
@@ -1067,7 +1068,7 @@ public:
 		return "TIMESYNC";
 	}
 
-	uint8_t get_id() {
+	uint16_t get_id() {
 		return MAVLINK_MSG_ID_TIMESYNC;
 	}
 
@@ -1112,7 +1113,7 @@ public:
 		return "CAMERA_TRIGGER";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_CAMERA_TRIGGER;
 	}
@@ -1172,7 +1173,7 @@ public:
 		return "GLOBAL_POSITION_INT";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_GLOBAL_POSITION_INT;
 	}
@@ -1245,7 +1246,7 @@ public:
         return "VISION_POSITION_NED";
     }
 
-    uint8_t get_id()
+    uint16_t get_id()
     {
         return MAVLINK_MSG_ID_VISION_POSITION_ESTIMATE;
     }
@@ -1309,7 +1310,7 @@ public:
 		return "LOCAL_POSITION_NED";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_LOCAL_POSITION_NED;
 	}
@@ -1372,7 +1373,7 @@ public:
 		return "LOCAL_POSITION_NED_COV";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_LOCAL_POSITION_NED_COV;
 	}
@@ -1444,7 +1445,7 @@ public:
 		return "ATT_POS_MOCAP";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_ATT_POS_MOCAP;
 	}
@@ -1508,7 +1509,7 @@ public:
 		return "HOME_POSITION";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_HOME_POSITION;
 	}
@@ -1578,7 +1579,7 @@ public:
 		return MavlinkStreamServoOutputRaw<N>::get_name_static();
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_SERVO_OUTPUT_RAW;
 	}
@@ -1675,7 +1676,7 @@ public:
 		}
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_ACTUATOR_CONTROL_TARGET;
 	}
@@ -1756,7 +1757,7 @@ public:
 		return "HIL_CONTROLS";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_HIL_CONTROLS;
 	}
@@ -1908,6 +1909,68 @@ protected:
 	}
 };
 
+class MavlinkStreamMountOrientation : public MavlinkStream
+{
+public:
+	const char *get_name() const
+	{
+		return MavlinkStreamMountOrientation::get_name_static();
+	}
+
+	static const char *get_name_static()
+	{
+		return "MOUNT_ORIENTATION";
+	}
+
+
+	uint16_t get_id()
+	{
+		return MAVLINK_MSG_ID_MOUNT_ORIENTATION;
+	}
+
+	static MavlinkStream *new_instance(Mavlink *mavlink)
+	{
+		return new MavlinkStreamMountOrientation(mavlink);
+	}
+
+	unsigned get_size()
+	{
+		return  MAVLINK_MSG_ID_MOUNT_ORIENTATION_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES ;
+	}
+
+private:
+	MavlinkOrbSubscription *_mount_orientation_sub;
+	uint64_t _mount_orientation_time;
+
+	/* do not allow top copying this class */
+	MavlinkStreamMountOrientation(MavlinkStreamMountOrientation &);
+	MavlinkStreamMountOrientation &operator = (const MavlinkStreamMountOrientation &);
+
+protected:
+	explicit MavlinkStreamMountOrientation(Mavlink *mavlink) : MavlinkStream(mavlink),
+		_mount_orientation_sub(_mavlink->add_orb_subscription(ORB_ID(mount_orientation))),
+		_mount_orientation_time(0)
+	{}
+
+	void send(const hrt_abstime t)
+	{
+		struct mount_orientation_s mount_orientation = {};
+
+		bool updated = _mount_orientation_sub->update(&_mount_orientation_time, &mount_orientation);
+
+		if (updated) {
+
+			mavlink_mount_orientation_t msg = {};
+			msg.time_boot_ms = hrt_absolute_time()/1000;
+			msg.roll = 180.0f / M_PI_F * mount_orientation.attitude_euler_angle[0];
+			msg.pitch = 180.0f / M_PI_F * mount_orientation.attitude_euler_angle[1];
+			msg.yaw = 180.0f / M_PI_F * mount_orientation.attitude_euler_angle[2];
+			_mavlink->send_message(MAVLINK_MSG_ID_MOUNT_ORIENTATION,&msg);
+
+			//mavlink_msg_mount_orientation_send_struct(_mavlink->get_channel(), &msg);
+		}
+	}
+};
 
 class MavlinkStreamPositionTargetGlobalInt : public MavlinkStream
 {
@@ -1922,7 +1985,7 @@ public:
 		return "POSITION_TARGET_GLOBAL_INT";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT;
 	}
@@ -1981,7 +2044,7 @@ public:
 		return "POSITION_TARGET_LOCAL_NED";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED;
 	}
@@ -2049,7 +2112,7 @@ public:
 		return "ATTITUDE_TARGET";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_ATTITUDE_TARGET;
 	}
@@ -2121,7 +2184,7 @@ public:
 		return "RC_CHANNELS";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_RC_CHANNELS;
 	}
@@ -2217,7 +2280,7 @@ public:
 		return "MANUAL_CONTROL";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_MANUAL_CONTROL;
 	}
@@ -2285,7 +2348,7 @@ public:
 		return "OPTICAL_FLOW_RAD";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_OPTICAL_FLOW_RAD;
 	}
@@ -2353,7 +2416,7 @@ public:
 		return "NAMED_VALUE_FLOAT";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_NAMED_VALUE_FLOAT;
 	}
@@ -2414,7 +2477,7 @@ public:
 		return "CAMERA_CAPTURE";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return 0;
 	}
@@ -2478,7 +2541,7 @@ public:
 		return "DISTANCE_SENSOR";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_DISTANCE_SENSOR;
 	}
@@ -2562,7 +2625,7 @@ public:
 		return "EXTENDED_SYS_STATE";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_EXTENDED_SYS_STATE;
 	}
@@ -2656,7 +2719,7 @@ public:
 		return "ALTITUDE";
 	}
 
-	uint8_t get_id()
+	uint16_t get_id()
 	{
 		return MAVLINK_MSG_ID_ALTITUDE;
 	}
@@ -2775,6 +2838,7 @@ const StreamListItem *streams_list[] = {
 	new StreamListItem(&MavlinkStreamCameraTrigger::new_instance, &MavlinkStreamCameraTrigger::get_name_static),
 	new StreamListItem(&MavlinkStreamDistanceSensor::new_instance, &MavlinkStreamDistanceSensor::get_name_static),
 	new StreamListItem(&MavlinkStreamExtendedSysState::new_instance, &MavlinkStreamExtendedSysState::get_name_static),
+	new StreamListItem(&MavlinkStreamMountOrientation::new_instance, &MavlinkStreamMountOrientation::get_name_static),
 	new StreamListItem(&MavlinkStreamAltitude::new_instance, &MavlinkStreamAltitude::get_name_static),
 	nullptr
 };

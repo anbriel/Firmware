@@ -429,10 +429,11 @@ Gimbal::cycle()
 	if (cmd_updated) {
 
 		orb_copy(ORB_ID(vehicle_command), _vehicle_command_sub, &cmd);
-
+		fprintf(stderr, "gimbal sys %i\n",cmd.target_system);
+		fprintf(stderr, "gimbal compo %i\n",cmd.target_component);
 		if (cmd.command == vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONTROL
 		    || cmd.command == vehicle_command_s::VEHICLE_CMD_DO_MOUNT_CONTROL_QUAT) {
-
+			fprintf(stderr, "mount control\n");
 			_control_cmd = cmd;
 			_control_cmd_set = true;
 

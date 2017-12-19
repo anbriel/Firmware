@@ -106,8 +106,8 @@ static Mavlink *_mavlink_instances = nullptr;
 static struct file_operations fops;
 #endif
 
-static const uint8_t mavlink_message_lengths[256] = MAVLINK_MESSAGE_LENGTHS;
-static const uint8_t mavlink_message_crcs[256] = MAVLINK_MESSAGE_CRCS;
+static const uint8_t mavlink_message_lengths[265] = MAVLINK_MESSAGE_LENGTHS;
+static const uint8_t mavlink_message_crcs[265] = MAVLINK_MESSAGE_CRCS;
 
 /**
  * mavlink app start / stop handling function
@@ -550,16 +550,20 @@ void Mavlink::mavlink_update_system(void)
 	param_get(_param_component_id, &component_id);
 
 	param_get(_param_radio_id, &_radio_id);
-
+	fprintf(stderr, "Not mavlink_system.sysid= %i\n",system_id);
+	fprintf(stderr, "Not mavlink_system..compid= %i\n",component_id);
 	/* only allow system ID and component ID updates
 	 * after reboot - not during operation */
 	if (!_param_initialized) {
 		if (system_id > 0 && system_id < 255) {
 			mavlink_system.sysid = system_id;
+			fprintf(stderr, "mavlink_system.sysid= %i\n",mavlink_system.sysid);
 		}
 
 		if (component_id > 0 && component_id < 255) {
-			mavlink_system.compid = component_id;
+		    mavlink_system.compid = component_id;
+		    fprintf(stderr, "mavlink_system..compid= %i\n",mavlink_system.compid);
+
 		}
 
 		_param_initialized = true;
@@ -872,7 +876,7 @@ Mavlink::get_free_tx_buf()
 }
 
 void
-Mavlink::send_message(const uint8_t msgid, const void *msg, uint8_t component_ID)
+Mavlink::send_message(const uint16_t msgid, const void *msg, uint8_t component_ID)
 {
 	/* If the wait until transmit flag is on, only transmit after we've received messages.
 	   Otherwise, transmit all the time. */
@@ -882,7 +886,7 @@ Mavlink::send_message(const uint8_t msgid, const void *msg, uint8_t component_ID
 
 	pthread_mutex_lock(&_send_mutex);
 
-	uint8_t payload_len = mavlink_message_lengths[msgid];
+	uint16_t payload_len = mavlink_message_lengths[msgid];
 	unsigned packet_len = payload_len + MAVLINK_NUM_NON_PAYLOAD_BYTES;
 
 	_last_write_try_time = hrt_absolute_time();
@@ -942,10 +946,11 @@ Mavlink::send_message(const uint8_t msgid, const void *msg, uint8_t component_ID
 		struct telemetry_status_s &tstatus = get_rx_status();
 
 		/* resend heartbeat via broadcast */
-		if ((_mode != MAVLINK_MODE_ONBOARD) &&
-			(!get_client_source_initialized()
-			|| (hrt_elapsed_time(&tstatus.heartbeat_time) > 3 * 1000 * 1000))
-			&& (msgid == MAVLINK_MSG_ID_HEARTBEAT)) {
+		if ((_mode != MAVLINK_MODE_ONBOARD)
+			&& (_mavlink_start_time > 0 && (hrt_elapsed_time(&_mavlink_start_time) > 4 * 1000 * 1000))
+			&& (((hrt_elapsed_time(&tstatus.heartbeat_time) > 3 * 1000 * 1000) ||
+			(tstatus.heartbeat_time == 0)) &&
+			msgid == MAVLINK_MSG_ID_HEARTBEAT)) {
 
 			int bret = sendto(_socket_fd, buf, packet_len, 0, (struct sockaddr *)&_bcast_addr, sizeof(_bcast_addr));
 
@@ -1761,6 +1766,7 @@ Mavlink::task_main(int argc, char *argv[])
 		configure_stream("EXTENDED_SYS_STATE", 1.0f);
 		configure_stream("ALTITUDE", 1.0f);
 		configure_stream("VISION_POSITION_NED", 10.0f);
+		configure_stream("MOUNT_ORIENTATION", 10.0f);
 		configure_stream("NAMED_VALUE_FLOAT", 1.0f);
 		break;
 
@@ -1790,6 +1796,7 @@ Mavlink::task_main(int argc, char *argv[])
 		configure_stream("EXTENDED_SYS_STATE", 2.0f);
 		configure_stream("ALTITUDE", 10.0f);
 		configure_stream("VISION_POSITION_NED", 10.0f);
+		configure_stream("MOUNT_ORIENTATION", 10.0f);
 		configure_stream("NAMED_VALUE_FLOAT", 10.0f);
 		break;
 
@@ -1838,6 +1845,7 @@ Mavlink::task_main(int argc, char *argv[])
 		configure_stream("EXTENDED_SYS_STATE", 2.0f);
 		configure_stream("ALTITUDE", 10.0f);
 		configure_stream("VISION_POSITION_NED", 10.0f);
+		configure_stream("MOUNT_ORIENTATION", 10.0f);
 		configure_stream("NAMED_VALUE_FLOAT", 50.0f);
 	default:
 		break;

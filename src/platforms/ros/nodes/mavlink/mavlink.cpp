@@ -299,9 +299,10 @@ void Mavlink::handle_msg_set_position_target_local_ned(const mavlink_message_t *
 		if (!offboard_control_mode.ignore_bodyrate && !isnan(set_position_target_local_ned.yaw)) {
 			pos_sp_triplet.current.yawspeed_valid = true;
 			pos_sp_triplet.current.yawspeed = set_position_target_local_ned.yaw_rate;
-
+			fprintf(stderr, "yawspeed true \n");
 		} else {
 			pos_sp_triplet.current.yawspeed_valid = false;
+			fprintf(stderr, "yawspeed false \n");
 		}
 
 		//XXX handle global pos setpoints (different MAV frames)

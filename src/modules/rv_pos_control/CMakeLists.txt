@@ -31,16 +31,18 @@
 #
 ############################################################################
 px4_add_module(
-	MODULE examples__rover_steering_control
-	MAIN rover_steering_control
+	MODULE modules__rv_pos_control
+	MAIN rv_pos_control
 	STACK 1200
 	COMPILE_FLAGS
-		-Wframe-larger-than=1300
-		
+		-Wno-float-equal
+		-Os
 	SRCS
-		main.cpp
-		params.c
+		rv_pos_control_main.cpp
 	DEPENDS
 		platforms__common
+		git_ecl
+		lib__external_lgpl
+		lib__ecl
 	)
 # vim: set noet ft=cmake fenc=utf-8 ff=unix : 

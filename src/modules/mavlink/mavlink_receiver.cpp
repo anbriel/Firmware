@@ -153,8 +153,9 @@ MavlinkReceiver::~MavlinkReceiver()
 void
 MavlinkReceiver::handle_message(mavlink_message_t *msg)
 {
-	switch (msg->msgid) {
+   	switch (msg->msgid) {
 	case MAVLINK_MSG_ID_COMMAND_LONG:
+		fprintf(stderr, "cmd_mavlink\n");
 		handle_message_command_long(msg);
 		break;
 
@@ -175,10 +176,12 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		break;
 
 	case MAVLINK_MSG_ID_ATT_POS_MOCAP:
+
 		handle_message_att_pos_mocap(msg);
 		break;
 
 	case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED:
+
 		handle_message_set_position_target_local_ned(msg);
 		break;
 
@@ -283,7 +286,10 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 	/* command */
 	mavlink_command_long_t cmd_mavlink;
 	mavlink_msg_command_long_decode(msg, &cmd_mavlink);
-
+	fprintf(stderr, "cmd_mavlink.target_system %i\n",cmd_mavlink.target_system);
+	fprintf(stderr, "cmd_mavlink.target_compo %i\n",cmd_mavlink.target_component);
+	fprintf(stderr, "mavlink_system.sysid %i\n",mavlink_system.sysid);
+		fprintf(stderr, "mavlink_system.compid %i\n",mavlink_system.compid);
 	/* evaluate if this system should accept this command */
 	bool target_ok;
 	switch (cmd_mavlink.command) {
@@ -323,7 +329,8 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 				      mavlink_system.sysid, mavlink_system.compid);
 				return;
 			}
-
+		}
+	}
 			struct vehicle_command_s vcmd;
 			memset(&vcmd, 0, sizeof(vcmd));
 
@@ -343,14 +350,17 @@ MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 			vcmd.source_component = msg->compid;
 			vcmd.confirmation =  cmd_mavlink.confirmation;
 
+			fprintf(stderr, "msg->sysid %i\n",msg->sysid);
+			fprintf(stderr, "msg->compid %i\n",msg->compid);
 			if (_cmd_pub == nullptr) {
 				_cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
 
 			} else {
+				fprintf(stderr, "publish commande vehicle\n");
 				orb_publish(ORB_ID(vehicle_command), _cmd_pub, &vcmd);
 			}
-		}
-	}
+
+
 }
 
 void
@@ -608,7 +618,7 @@ MavlinkReceiver::handle_message_att_pos_mocap(mavlink_message_t *msg)
 	att_pos_mocap.q[1] = mocap.q[1];
 	att_pos_mocap.q[2] = mocap.q[2];
 	att_pos_mocap.q[3] = mocap.q[3];
-
+	//fprintf(stderr, "1mocap.x=%0.2f,mocap.y=%0.2f \n",(double)mocap.x,(double)mocap.y);
 	att_pos_mocap.x = mocap.x;
 	att_pos_mocap.y = mocap.y;
 	att_pos_mocap.z = mocap.z;
@@ -638,7 +648,9 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 
 		/* convert mavlink type (local, NED) to uORB offboard control struct */
 		offboard_control_mode.ignore_position = (bool)(set_position_target_local_ned.type_mask & 0x7);
+
 		offboard_control_mode.ignore_velocity = (bool)(set_position_target_local_ned.type_mask & 0x38);
+		//fprintf(stderr, "velocity=%i\n",offboard_control_mode.ignore_velocity);
 		offboard_control_mode.ignore_acceleration_force = (bool)(set_position_target_local_ned.type_mask & 0x1C0);
 		bool is_force_sp = (bool)(set_position_target_local_ned.type_mask & (1 << 9));
 		/* yaw ignore flag mapps to ignore_attitude */
@@ -664,6 +676,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 				orb_copy(ORB_ID(vehicle_control_mode), _control_mode_sub, &_control_mode);
 			}
 			if (_control_mode.flag_control_offboard_enabled) {
+
 				if (is_force_sp && offboard_control_mode.ignore_position &&
 						offboard_control_mode.ignore_velocity) {
 					/* The offboard setpoint is a force setpoint only, directly writing to the force
@@ -680,6 +693,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 					}
 				} else {
 					/* It's not a pure force setpoint: publish to setpoint triplet  topic */
+
 					struct position_setpoint_triplet_s pos_sp_triplet;
 					pos_sp_triplet.previous.valid = false;
 					pos_sp_triplet.next.valid = false;
@@ -688,6 +702,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 
 					/* set the local pos values */
 					if (!offboard_control_mode.ignore_position) {
+					   // fprintf(stderr, "position vx=%0.2f\n",(double)set_position_target_local_ned.vx);
 						pos_sp_triplet.current.position_valid = true;
 						pos_sp_triplet.current.x = set_position_target_local_ned.x;
 						pos_sp_triplet.current.y = set_position_target_local_ned.y;
@@ -698,6 +713,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 
 					/* set the local vel values */
 					if (!offboard_control_mode.ignore_velocity) {
+					  //  fprintf(stderr, "velocity vx=%0.2f\n",(double)set_position_target_local_ned.vx);
 						pos_sp_triplet.current.velocity_valid = true;
 						pos_sp_triplet.current.vx = set_position_target_local_ned.vx;
 						pos_sp_triplet.current.vy = set_position_target_local_ned.vy;
@@ -710,6 +726,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 					 * of the accelerations fields is set to 'ignore' */
 					if (!offboard_control_mode.ignore_acceleration_force) {
 						pos_sp_triplet.current.acceleration_valid = true;
+					   // fprintf(stderr, "pos_sp_triplet.current.a_z=%0.2f\n",(double)set_position_target_local_ned.afz);
 						pos_sp_triplet.current.a_x = set_position_target_local_ned.afx;
 						pos_sp_triplet.current.a_y = set_position_target_local_ned.afy;
 						pos_sp_triplet.current.a_z = set_position_target_local_ned.afz;
@@ -724,6 +741,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 					if (!offboard_control_mode.ignore_attitude && PX4_ISFINITE(set_position_target_local_ned.yaw)) {
 						pos_sp_triplet.current.yaw_valid = true;
 						pos_sp_triplet.current.yaw = set_position_target_local_ned.yaw;
+						fprintf(stderr, "receive yaw=%0.2f\n",(double)pos_sp_triplet.current.yaw);
 
 					} else {
 						pos_sp_triplet.current.yaw_valid = false;
@@ -733,7 +751,7 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 					if (!offboard_control_mode.ignore_bodyrate && PX4_ISFINITE(set_position_target_local_ned.yaw)) {
 						pos_sp_triplet.current.yawspeed_valid = true;
 						pos_sp_triplet.current.yawspeed = set_position_target_local_ned.yaw_rate;
-
+					   // fprintf(stderr, " yaw rate=%0.2f\n",(double)pos_sp_triplet.current.yawspeed);
 					} else {
 						pos_sp_triplet.current.yawspeed_valid = false;
 					}
@@ -743,9 +761,11 @@ MavlinkReceiver::handle_message_set_position_target_local_ned(mavlink_message_t 
 					if (_pos_sp_triplet_pub == nullptr) {
 						_pos_sp_triplet_pub = orb_advertise(ORB_ID(position_setpoint_triplet),
 								&pos_sp_triplet);
+
 					} else {
 						orb_publish(ORB_ID(position_setpoint_triplet), _pos_sp_triplet_pub,
 								&pos_sp_triplet);
+
 					}
 
 				}
@@ -1163,6 +1183,7 @@ MavlinkReceiver::handle_message_heartbeat(mavlink_message_t *msg)
 {
 	/* telemetry status supported only on first TELEMETRY_STATUS_ORB_ID_NUM mavlink channels */
 	if (_mavlink->get_channel() < ORB_MULTI_MAX_INSTANCES) {
+
 		mavlink_heartbeat_t hb;
 		mavlink_msg_heartbeat_decode(msg, &hb);
 
@@ -1814,38 +1835,32 @@ MavlinkReceiver::receive_thread(void *arg)
 
 			struct sockaddr_in * srcaddr_last = _mavlink->get_client_source_address();
 			int localhost = (127 << 24) + 1;
-			if (!_mavlink->get_client_source_initialized()) {
-				
-				// set the address either if localhost or if 3 seconds have passed
-				// this ensures that a GCS running on localhost can get a hold of
-				// the system within the first N seconds
-				hrt_abstime stime = _mavlink->get_start_time();
-				if ((stime != 0 && (hrt_elapsed_time(&stime) > 3 * 1000 * 1000))
-					|| (srcaddr_last->sin_addr.s_addr == htonl(localhost))) {
-					srcaddr_last->sin_addr.s_addr = srcaddr.sin_addr.s_addr;
-					srcaddr_last->sin_port = srcaddr.sin_port;
-					_mavlink->set_client_source_initialized();
-				}
+			if ((srcaddr_last->sin_addr.s_addr == htonl(localhost) && srcaddr.sin_addr.s_addr != htonl(localhost))
+					|| (_mavlink->get_mode() == Mavlink::MAVLINK_MODE_ONBOARD && !_mavlink->get_client_source_initialized())) {
+				// if we were sending to localhost before but have a new host then accept him
+// This is causing issues on Linux, so use default port for now
+// this will kill tablet testing on Linux and VMs
+#ifndef __PX4_LINUX
+				srcaddr_last->sin_addr.s_addr = srcaddr.sin_addr.s_addr;
+				srcaddr_last->sin_port = srcaddr.sin_port;
+#endif
+				_mavlink->set_client_source_initialized();
 			}
 #endif
-			// only start accepting messages once we're sure who we talk to
+			/* if read failed, this loop won't execute */
+			for (ssize_t i = 0; i < nread; i++) {
+				if (mavlink_parse_char(_mavlink->get_channel(), buf[i], &msg, &status)) {
+					/* handle generic messages and commands */
+					handle_message(&msg);
 
-			if (_mavlink->get_client_source_initialized()) {
-				/* if read failed, this loop won't execute */
-				for (ssize_t i = 0; i < nread; i++) {
-					if (mavlink_parse_char(_mavlink->get_channel(), buf[i], &msg, &status)) {
-						/* handle generic messages and commands */
-						handle_message(&msg);
-
-						/* handle packet with parent object */
-						_mavlink->handle_message(&msg);
-					}
+					/* handle packet with parent object */
+					_mavlink->handle_message(&msg);
 				}
+			}
 
-				/* count received bytes (nread will be -1 on read error) */
-				if (nread > 0) {
-					_mavlink->count_rxbytes(nread);
-				}
+			/* count received bytes (nread will be -1 on read error) */
+			if (nread > 0) {
+				_mavlink->count_rxbytes(nread);
 			}
 		}
 	}

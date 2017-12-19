@@ -30,6 +30,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
+PWD = "D:\Utilisateurs\FBT2\Documents\Github\Firmware"
 
 # Enforce the presence of the GIT repository
 #

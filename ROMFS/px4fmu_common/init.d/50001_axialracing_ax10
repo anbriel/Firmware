@@ -4,8 +4,18 @@
 #
 # @type Rover
 #
-
+echo "5001_axialracing_ax10"
 sh /etc/init.d/rc.axialracing_ax10_defaults
+set VEHICLE_TYPE rover
 
-#choose a mixer, for rover control we need a plain passthrough to the servos
-set MIXER IO_pass
+
+usleep 10000
+set OUTPUT_MODE md25
+
+# This is the gimbal pass mixer
+set MIXER_AUX pass
+set PWM_AUX_RATE 50
+set PWM_AUX_OUT 1234
+set PWM_AUX_DISARMED 1500
+set PWM_AUX_MIN 1000
+set PWM_AUX_MAX 2000
